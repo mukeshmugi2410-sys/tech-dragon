@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% block title %}Set Salary - Admin{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-money-check-alt me-2"></i>Salary Management</h2>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#bulkUpdateModal">
+        <i class="fas fa-sync-alt me-1"></i>Bulk Update
+    </button>
+</div>
+
+<div class="dashboard-card mb-4">
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <input type="text" class="form-control" placeholder="Search employees..." id="searchSalary">
+        </div>
+        <div class="col-md-3 mb-3">
+            <select class="form-select" id="deptSalaryFilter">
+                <option value="">All Departments</option>
+                {% for d in departments %}
+                <option value="{{ d.name }}">{{ d.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3 mb-3">
+            <select class="form-select" id="salaryRangeFilter">
+                <option value="">All Salary Ranges</option>
+                <option value="low">Less than ₹30,000</option>
+                <option value="medium">₹30,000 - ₹70,000</option>
+                <option value="high">More than ₹70,000</option>
+            </select>
+        </div>
+        <div class="col-md-2 mb-3">
+            <button class="btn btn-outline-primary w-100" id="exportSalary">
+                <i class="fas fa-download me-1"></i>Export
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <form method="post" action="/admin/payroll/set-salary">
+        <div class="table-responsive">
+            <table class="table table-hover" id="salaryTable">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Department</th>
+                        <th>Position</th>
+                        <th>Current Salary</th>
+                        <th>New Salary</th>
+                        <th>Change %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in employees %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2"
+                                    style="width: 36px; height: 36px;">
+                                    {{ e.name[0]|upper }}
+                                </div>
+                                <div>
+                                    <strong>{{ e.name }}</strong><br>
+                                    <small class="text-muted">ID: {{ e.id }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ e.department }}</td>
+                        <td>{{ e.position }}</td>
+                        <td>
+                            <strong class="text-primary">₹{{ e.salary }}</strong>
+                        </td>
+                        <td style="width: 200px;">
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" name="salary_{{ e.id }}" class="form-control"
+                                    value="{{ e.salary }}" min="0" step="1000">
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">0%</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4">
+            <div class="alert alert-warning">
+                <h6><i class="fas fa-exclamation-triangle me-2"></i>Important Notes:</h6>
+                <ul class="mb-0">
+                    <li>Salary changes will be effective from next payroll cycle</li>
+                    <li>Employees will be notified about salary changes</li>
+                    <li>Changes require HR department approval</li>
+                    <li>Backup current salary data before making changes</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+            <button type="reset" class="btn btn-secondary">Reset Changes</button>
+            <button type="submit" class="btn btn-primary" onclick="return confirm('Save all salary changes?')">
+                <i class="fas fa-save me-2"></i>Save All Changes
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Update bulk update label based on type
+    document.getElementById('updateType').addEventListener('change', function () {
+        const label = document.getElementById('updateLabel');
+        const valueInput = document.getElementById('updateValue');
+
+        switch (this.value) {
+            case 'percentage':
+                label.textContent = 'Percentage Increase (%)';
+                valueInput.value = '10';
+                break;
+            case 'fixed':
+                label.textContent = 'Fixed Amount (₹)';
+                valueInput.value = '5000';
+                break;
+            case 'set':
+                label.textContent = 'Set to Amount (₹)';
+                valueInput.value = '30000';
+                break;
+        }
+    });
+
+    // Apply bulk update
+    document.getElementById('applyBulkUpdate').addEventListener('click', function () {
+        const updateType = document.getElementById('updateType').value;
+        const updateValue = parseFloat(document.getElementById('updateValue').value);
+        const bulkDept = document.getElementById('bulkDept').value;
+
+        const rows = document.querySelectorAll('#salaryTable tbody tr');
+
+        rows.forEach(row => {
+            const department = row.cells[1].textContent;
+            const currentSalary = parseFloat(row.cells[3].querySelector('strong').textContent.replace('₹', '').replace(',', ''));
+            const salaryInput = row.cells[4].querySelector('input');
+
+            // Filter by department if selected
+            if (bulkDept && !department.includes(bulkDept)) {
+                return;
+            }
+
+            let newSalary = currentSalary;
+
+            switch (updateType) {
+                case 'percentage':
+                    newSalary = currentSalary * (1 + updateValue / 100);
+                    break;
+                case 'fixed':
+                    newSalary = currentSalary + updateValue;
+                    break;
+                case 'set':
+                    newSalary = updateValue;
+                    break;
+            }
+
+            // Update input value
+            salaryInput.value = Math.round(newSalary);
+
+            // Update change percentage badge
+            const changePercent = ((newSalary - currentSalary) / currentSalary * 100).toFixed(1);
+            const badge = row.cells[5].querySelector('.badge');
+
+            badge.textContent = changePercent + '%';
+            if (changePercent > 0) {
+                badge.className = 'badge bg-success';
+            } else if (changePercent < 0) {
+                badge.className = 'badge bg-danger';
+            } else {
+                badge.className = 'badge bg-secondary';
+            }
+        });
+
+        // Close modal
+        bootstrap.Modal.getInstance(document.getElementById('bulkUpdateModal')).hide();
+    });
+
+    // Search functionality
+    document.getElementById('searchSalary').addEventListener('keyup', function () {
+        const searchValue = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#salaryTable tbody tr');
+
+        rows.forEach(row => {
+            const employeeName = row.cells[0].textContent.toLowerCase();
+            row.style.display = employeeName.includes(searchValue) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}
+
+{% block modals %}
+<!-- Bulk Update Modal -->
+<div class="modal fade" id="bulkUpdateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bulk Salary Update</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Select Department</label>
+                    <select class="form-select" id="bulkDept">
+                        <option value="">All Departments</option>
+                        {% for d in departments %}
+                        <option value="{{ d.id }}">{{ d.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Update Type</label>
+                    <select class="form-select" id="updateType">
+                        <option value="percentage">Percentage Increase</option>
+                        <option value="fixed">Fixed Amount</option>
+                        <option value="set">Set to Specific Amount</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" id="updateLabel">Percentage Increase (%)</label>
+                    <input type="number" class="form-control" id="updateValue" value="10" min="0" step="0.5">
+                </div>
+                <div class="alert alert-info">
+                    <small>
+                        <i class="fas fa-info-circle me-1"></i>
+                        This will update salaries for all selected employees at once.
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="applyBulkUpdate">
+                    Apply Update
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

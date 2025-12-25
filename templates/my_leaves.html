@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block title %}My Leaves{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-clipboard-list me-2"></i>My Leave Applications</h2>
+    <a href="/leave/apply" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>Apply New Leave
+    </a>
+</div>
+
+<!-- Filter Options -->
+<div class="dashboard-card mb-4">
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <select class="form-select" id="statusFilter">
+                <option value="">All Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+            </select>
+        </div>
+        <div class="col-md-3 mb-3">
+            <select class="form-select" id="typeFilter">
+                <option value="">All Types</option>
+                <option value="Sick">Sick Leave</option>
+                <option value="Casual">Casual Leave</option>
+                <option value="Earned">Earned Leave</option>
+            </select>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                <input type="date" class="form-control" id="dateFilter">
+                <input type="date" class="form-control" id="dateFilterEnd">
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <button class="btn btn-outline-primary w-100" id="resetFilter">
+                <i class="fas fa-redo me-1"></i>Reset
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Leaves Table -->
+<div class="dashboard-card">
+    <div class="table-responsive">
+        <table class="table table-hover" id="leavesTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Leave Type</th>
+                    <th>From Date</th>
+                    <th>To Date</th>
+                    <th>Days</th>
+                    <th>Applied On</th>
+                    <th>Status</th>
+                    <th>Approved By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in leaves %}
+                <tr>
+                    <td>{{ l.id }}</td>
+                    <td>{{ l.leave_type }}</td>
+                    <td>{{ l.start_date }}</td>
+                    <td>{{ l.end_date }}</td>
+                    <td>{{ l.total_days }}</td>
+                    <td>{{ l.applied_date.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        {% if l.status == 'Pending' %}
+                        <span class="badge bg-warning">Pending</span>
+                        {% elif l.status == 'Approved' %}
+                        <span class="badge bg-success">Approved</span>
+                        {% elif l.status == 'Rejected' %}
+                        <span class="badge bg-danger">Rejected</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ l.approved_by or '--' }}</td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-info" data-bs-toggle="modal"
+                                data-bs-target="#viewLeaveModal{{ l.id }}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            {% if l.status == 'Pending' %}
+                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                data-bs-target="#editLeaveModal{{ l.id }}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                data-bs-target="#cancelLeaveModal{{ l.id }}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="alert alert-warning">
+                <h5 class="mb-1">Pending</h5>
+                <p class="mb-0 h4">{{ leaves|selectattr('status', 'equalto', 'Pending')|list|length }}</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="alert alert-success">
+                <h5 class="mb-1">Approved</h5>
+                <p class="mb-0 h4">{{ leaves|selectattr('status', 'equalto', 'Approved')|list|length }}</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="alert alert-danger">
+                <h5 class="mb-1">Rejected</h5>
+                <p class="mb-0 h4">{{ leaves|selectattr('status', 'equalto', 'Rejected')|list|length }}</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="alert alert-info">
+                <h5 class="mb-1">Total Days</h5>
+                <p class="mb-0 h4">{{ leaves|sum(attribute='total_days') }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Filter functionality
+    document.getElementById('statusFilter').addEventListener('change', filterLeaves);
+    document.getElementById('typeFilter').addEventListener('change', filterLeaves);
+    document.getElementById('dateFilter').addEventListener('change', filterLeaves);
+    document.getElementById('dateFilterEnd').addEventListener('change', filterLeaves);
+
+    function filterLeaves() {
+        const statusFilter = document.getElementById('statusFilter').value;
+        const typeFilter = document.getElementById('typeFilter').value;
+        const dateFilter = document.getElementById('dateFilter').value;
+        const dateFilterEnd = document.getElementById('dateFilterEnd').value;
+
+        const rows = document.querySelectorAll('#leavesTable tbody tr');
+
+        rows.forEach(row => {
+            const status = row.cells[6].textContent.trim();
+            const type = row.cells[1].textContent.trim();
+            const fromDate = row.cells[2].textContent.trim();
+
+            let show = true;
+
+            if (statusFilter && !status.toLowerCase().includes(statusFilter.toLowerCase())) {
+                show = false;
+            }
+
+            if (typeFilter && !type.toLowerCase().includes(typeFilter.toLowerCase())) {
+                show = false;
+            }
+
+            if (dateFilter && fromDate < dateFilter) {
+                show = false;
+            }
+
+            if (dateFilterEnd && fromDate > dateFilterEnd) {
+                show = false;
+            }
+
+            row.style.display = show ? '' : 'none';
+        });
+    }
+
+    document.getElementById('resetFilter').addEventListener('click', function () {
+        document.getElementById('statusFilter').value = '';
+        document.getElementById('typeFilter').value = '';
+        document.getElementById('dateFilter').value = '';
+        document.getElementById('dateFilterEnd').value = '';
+
+        const rows = document.querySelectorAll('#leavesTable tbody tr');
+        rows.forEach(row => row.style.display = '');
+    });
+</script>
+{% endblock %}
+
+{% block modals %}
+{% for l in leaves %}
+<!-- View Leave Modal -->
+<div class="modal fade" id="viewLeaveModal{{ l.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Leave Application Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <p><strong>Leave Type:</strong> {{ l.leave_type }}</p>
+                    <p><strong>Period:</strong> {{ l.start_date }} to {{ l.end_date }}</p>
+                    <p><strong>Total Days:</strong> {{ l.total_days }}</p>
+                    <p><strong>Applied On:</strong> {{ l.applied_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                    <p><strong>Status:</strong>
+                        {% if l.status == 'Pending' %}
+                        <span class="badge bg-warning">Pending</span>
+                        {% elif l.status == 'Approved' %}
+                        <span class="badge bg-success">Approved</span>
+                        {% elif l.status == 'Rejected' %}
+                        <span class="badge bg-danger">Rejected</span>
+                        {% endif %}
+                    </p>
+                    {% if l.approved_by %}
+                    <p><strong>Approved By:</strong> {{ l.approved_by }}</p>
+                    <p><strong>Approved On:</strong> {{ l.approved_date.strftime('%Y-%m-%d %H:%M') if l.approved_date
+                        else '--' }}</p>
+                    {% endif %}
+                    <p><strong>Reason:</strong></p>
+                    <div class="border rounded p-3">
+                        {{ l.reason or 'No reason provided' }}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

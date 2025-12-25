@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</h2>
+    <div class="text-muted">
+        <i class="fas fa-calendar-alt me-1"></i> {{ now.strftime('%A, %B %d, %Y') }}
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="stat-card">
+            <i class="fas fa-users fa-3x mb-3 text-primary"></i>
+            <h2>{{ total_employees }}</h2>
+            <p>Total Employees</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card" style="border-bottom-color: var(--secondary-color);">
+            <i class="fas fa-user-tie fa-3x mb-3 text-secondary"></i>
+            <h2>{{ total_hr }}</h2>
+            <p>HR Managers</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card" style="border-bottom-color: var(--info-color);">
+            <i class="fas fa-building fa-3x mb-3 text-info"></i>
+            <h2>{{ total_departments }}</h2>
+            <p>Departments</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card" style="border-bottom-color: var(--success-color);">
+            <i class="fas fa-calendar-check fa-3x mb-3 text-success"></i>
+            <h2>{{ today_attendance }}</h2>
+            <p>Today's Attendance</p>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="dashboard-card">
+            <h4 class="mb-4"><i class="fas fa-bolt me-2"></i>Quick Actions</h4>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <a href="/admin/employees" class="btn btn-primary w-100 py-3">
+                        <i class="fas fa-user-plus fa-2x mb-2"></i><br>
+                        Add Employee
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="/admin/hr-managers" class="btn btn-success w-100 py-3">
+                        <i class="fas fa-user-tie fa-2x mb-2"></i><br>
+                        Manage HR
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="/admin/departments" class="btn btn-warning w-100 py-3">
+                        <i class="fas fa-building fa-2x mb-2"></i><br>
+                        Departments
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="/admin/reports" class="btn btn-info w-100 py-3">
+                        <i class="fas fa-chart-bar fa-2x mb-2"></i><br>
+                        View Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activities -->
+<div class="row">
+    <div class="col-md-8 mb-4">
+        <div class="dashboard-card">
+            <h4 class="mb-4"><i class="fas fa-history me-2"></i>Recent Activities</h4>
+            <div class="list-group">
+                <div class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">New employee registered</h6>
+                        <small>10 mins ago</small>
+                    </div>
+                    <p class="mb-1">John Doe joined as Software Engineer</p>
+                </div>
+                <div class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Leave request approved</h6>
+                        <small>1 hour ago</small>
+                    </div>
+                    <p class="mb-1">Jane Smith's leave for 3 days approved</p>
+                </div>
+                <div class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Attendance marked</h6>
+                        <small>2 hours ago</small>
+                    </div>
+                    <p class="mb-1">45 employees checked in today</p>
+                </div>
+                <div class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">New department created</h6>
+                        <small>5 hours ago</small>
+                    </div>
+                    <p class="mb-1">Marketing department added</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="dashboard-card">
+            <h4 class="mb-4"><i class="fas fa-exclamation-circle me-2"></i>Pending Actions</h4>
+            <div class="alert alert-warning">
+                <h5><i class="fas fa-calendar-minus me-2"></i>{{ pending_leaves }} Leave Requests</h5>
+                <p class="mb-2">Need your approval</p>
+                <a href="/admin/leave-requests" class="btn btn-sm btn-warning">Review Now</a>
+            </div>
+            <div class="alert alert-info">
+                <h5><i class="fas fa-file-alt me-2"></i>12 Reports Ready</h5>
+                <p class="mb-2">Monthly reports generated</p>
+                <a href="/admin/reports" class="btn btn-sm btn-info">View Reports</a>
+            </div>
+            <div class="alert alert-success">
+                <h5><i class="fas fa-check-circle me-2"></i>System Status</h5>
+                <p class="mb-0">All systems operational</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

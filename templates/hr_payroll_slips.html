@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% block title %}Payroll - HR{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-money-check-alt me-2"></i>Department Payroll</h2>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#generatePayrollModal">
+        <i class="fas fa-calculator me-1"></i>Generate Payroll
+    </button>
+</div>
+
+<!-- Month Selection -->
+<div class="dashboard-card mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Select Month</label>
+            <input type="month" class="form-control" id="monthSelect" value="{{ selected_month }}">
+        </div>
+        <div class="col-md-6 mb-3 d-flex align-items-end">
+            <div class="btn-group w-100">
+                <button class="btn btn-primary" id="loadPayroll">
+                    <i class="fas fa-search me-1"></i>Load Payroll
+                </button>
+                <button class="btn btn-success" id="processPayment">
+                    <i class="fas fa-check-circle me-1"></i>Process Payment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payroll Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="stat-card">
+            <i class="fas fa-users fa-3x mb-3"></i>
+            <h2>{{ slips|length }}</h2>
+            <p>Employees</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #2ecc71, #27ae60);">
+            <i class="fas fa-money-bill-wave fa-3x mb-3"></i>
+            <h2>₹{{ total_salary or 0 }}</h2>
+            <p>Total Salary</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f39c12, #e67e22);">
+            <i class="fas fa-coins fa-3x mb-3"></i>
+            <h2>₹{{ total_tax or 0 }}</h2>
+            <p>Total Tax</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #3498db, #2980b9);">
+            <i class="fas fa-percentage fa-3x mb-3"></i>
+            <h2>{{ avg_tax_rate or 0 }}%</h2>
+            <p>Avg Tax Rate</p>
+        </div>
+    </div>
+</div>
+
+<!-- Payroll Table -->
+<div class="dashboard-card">
+    <h4 class="mb-4">Payroll for {{ selected_month }}</h4>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    {% if is_admin %}
+                    <th>Department</th>
+                    {% endif %}
+                    <th>Basic</th>
+                    <th>Allowances</th>
+                    <th>Deductions</th>
+                    <th>Net Salary</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in slips %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2"
+                                style="width: 36px; height: 36px;">
+                                {{ s.name[0]|upper }}
+                            </div>
+                            <div>
+                                <strong>{{ s.name }}</strong><br>
+                                <small class="text-muted">{{ s.position }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    {% if is_admin %}
+                    <td>{{ s.department }}</td>
+                    {% endif %}
+                    <td>₹{{ s.basic }}</td>
+                    <td>
+                        <small class="text-success">+₹{{ s.allowances or 0 }}</small>
+                    </td>
+                    <td>
+                        <small class="text-danger">-₹{{ s.deductions or 0 }}</small>
+                    </td>
+                    <td>
+                        <strong class="text-primary">₹{{ s.net }}</strong>
+                    </td>
+                    <td>
+                        {% if s.status == 'Paid' %}
+                        <span class="badge bg-success">Paid</span>
+                        {% elif s.status == 'Pending' %}
+                        <span class="badge bg-warning">Pending</span>
+                        {% elif s.status == 'Processing' %}
+                        <span class="badge bg-info">Processing</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-info" data-bs-toggle="modal"
+                                data-bs-target="#viewPayslipModal{{ s.id }}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                data-bs-target="#editPayslipModal{{ s.id }}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-success" onclick="markAsPaid({{ s.id }})">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Payroll Summary -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="alert alert-success">
+                <h5><i class="fas fa-arrow-up me-2"></i>Total Earnings</h5>
+                <p class="mb-0 h3">₹{{ total_earnings or 0 }}</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="alert alert-danger">
+                <h5><i class="fas fa-arrow-down me-2"></i>Total Deductions</h5>
+                <p class="mb-0 h3">₹{{ total_deductions or 0 }}</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="alert alert-primary">
+                <h5><i class="fas fa-hand-holding-usd me-2"></i>Net Payable</h5>
+                <p class="mb-0 h3">₹{{ total_net or 0 }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Load payroll for selected month
+    document.getElementById('loadPayroll').addEventListener('click', function () {
+        const month = document.getElementById('monthSelect').value;
+        window.location.href = `/hr/payroll/slips?month=${month}`;
+    });
+
+    // Mark as paid
+    function markAsPaid(id) {
+        if (confirm('Mark this payslip as paid?')) {
+            // AJAX call to mark as paid
+            alert('Payslip marked as paid!');
+        }
+    }
+
+    // Generate payroll
+    document.getElementById('generateBtn').addEventListener('click', function () {
+        const month = document.getElementById('generateMonth').value;
+        const includeOvertime = document.getElementById('includeOvertime').checked;
+        const includeBonuses = document.getElementById('includeBonuses').checked;
+        const includeDeductions = document.getElementById('includeDeductions').checked;
+
+        // Show loading
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Generating...';
+        this.disabled = true;
+
+        // Simulate API call
+        setTimeout(() => {
+            alert(`Payroll for ${month} generated successfully!`);
+            bootstrap.Modal.getInstance(document.getElementById('generatePayrollModal')).hide();
+
+            // Reset button
+            this.innerHTML = '<i class="fas fa-calculator me-1"></i>Generate Payroll';
+            this.disabled = false;
+
+            // Reload page
+            window.location.reload();
+        }, 2000);
+    });
+
+    // Process payment
+    document.getElementById('processPayment').addEventListener('click', function () {
+        if (confirm('Process payments for all employees this month?')) {
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+            this.disabled = true;
+
+            setTimeout(() => {
+                alert('Payments processed successfully!');
+                this.innerHTML = '<i class="fas fa-check-circle me-1"></i>Process Payment';
+                this.disabled = false;
+            }, 3000);
+        }
+    });
+</script>
+{% endblock %}
+
+{% block modals %}
+<!-- Generate Payroll Modal -->
+<div class="modal fade" id="generatePayrollModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Generate Payroll</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Select Month</label>
+                    <input type="month" class="form-control" id="generateMonth" value="{{ now.strftime('%Y-%m') }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Include</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="includeOvertime" checked>
+                        <label class="form-check-label" for="includeOvertime">
+                            Overtime Payments
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="includeBonuses" checked>
+                        <label class="form-check-label" for="includeBonuses">
+                            Performance Bonuses
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="includeDeductions" checked>
+                        <label class="form-check-label" for="includeDeductions">
+                            Standard Deductions
+                        </label>
+                    </div>
+                </div>
+                <div class="alert alert-warning">
+                    <small>
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        This will calculate payroll for all employees in your department.
+                        Make sure attendance and leave data is up to date.
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="generateBtn">
+                    <i class="fas fa-calculator me-1"></i>Generate Payroll
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

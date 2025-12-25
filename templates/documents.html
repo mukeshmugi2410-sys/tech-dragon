@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Documents - Tech Cart HR{% endblock %}
+
+    {% block content %}
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-folder-open me-2 text-primary"></i>Document Management</h2>
+            <p class="text-muted">Manage your personal documents, ID proofs, and contracts.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                <i class="fas fa-cloud-upload-alt me-2"></i>Upload Document
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for type_name, type_code in [('Resumes', 'resume'), ('ID Proofs', 'id_proof'), ('Contracts', 'contract'),
+        ('Other', 'other')] %}
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-light rounded-circle p-3 me-3">
+                            <i
+                                class="fas fa-file-{% if type_code == 'resume' %}user{% elif type_code == 'id_proof' %}id-card{% elif type_code == 'contract' %}signature{% else %}alt{% endif %} text-primary fa-lg"></i>
+                        </div>
+                        <h5 class="card-title mb-0">{{ type_name }}</h5>
+                    </div>
+
+                    <div class="list-group list-group-flush">
+                        {% set ns = namespace(found=false) %}
+                        {% for doc in documents %}
+                        {% if doc.type == type_code %}
+                        {% set ns.found = true %}
+                        <div
+                            class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
+                            <div class="text-truncate me-2">
+                                <a href="{{ url_for('static', filename='uploads/documents/' + doc.file_path) }}"
+                                    target="_blank" class="text-decoration-none text-dark fw-medium">
+                                    {{ doc.title }}
+                                </a>
+                                <small class="d-block text-muted" style="font-size: 0.75rem;">{{
+                                    doc.uploaded_at.strftime('%Y-%m-%d') }}</small>
+                            </div>
+                            <a href="/documents/delete/{{ doc.id }}" class="btn btn-light btn-sm text-danger"
+                                onclick="return confirmDelete()">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if not ns.found %}
+                        <p class="text-muted small mb-0 fst-italic">No documents uploaded</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% endblock %}
+
+    {% block modals %}
+    <!-- Upload Modal -->
+    <div class="modal fade" id="uploadModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">Upload Document</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ url_for('upload_document') }}" method="POST" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Document Title</label>
+                            <input type="text" name="title" class="form-control" required
+                                placeholder="e.g. Updated Resume 2024">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Document Type</label>
+                            <select name="type" class="form-select" required>
+                                <option value="resume">Resume/CV</option>
+                                <option value="id_proof">ID Proof</option>
+                                <option value="contract">Contract/Agreement</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Select File</label>
+                            <input type="file" name="file" class="form-control" required>
+                            <div class="form-text">PDF, JPG, PNG allowed. Max 16MB.</div>
+                        </div>
+                        {% if is_admin %}
+                        <div class="mb-3">
+                            <label class="form-label">Upload for User (Optional - Admin only)</label>
+                            <select name="user_id" class="form-select">
+                                <option value="">-- For Myself --</option>
+                                {% for user in all_users %}
+                                <option value="{{ user.id }}">{{ user.name }} ({{ user.role }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endblock %}

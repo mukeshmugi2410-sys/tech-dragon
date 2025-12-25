@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Mark Attendance{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-user-clock me-2"></i>Mark Attendance</h2>
+    <div class="text-muted">
+        <i class="fas fa-calendar-alt me-1"></i> {{ today.strftime('%A, %B %d, %Y') }}
+    </div>
+</div>
+
+<!-- Today's Status -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="dashboard-card">
+            <h4 class="mb-4">Today's Attendance Status</h4>
+
+            {% if not today_record %}
+            <div class="alert alert-warning">
+                <h5><i class="fas fa-clock me-2"></i>Not Checked In Yet</h5>
+                <p class="mb-3">You haven't checked in for today. Click the button below to check in.</p>
+                <form method="POST" class="mb-0">
+                    <button type="submit" name="action" value="check_in" class="btn btn-success btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Check In Now
+                    </button>
+                </form>
+            </div>
+            {% elif today_record and not today_record.check_out %}
+            <div class="alert alert-info">
+                <h5><i class="fas fa-user-check me-2"></i>Checked In</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Check In Time:</strong></p>
+                        <h3 class="text-primary">{{ today_record.check_in }}</h3>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Duration:</strong></p>
+                        <h3 id="currentDuration">0h 0m</h3>
+                    </div>
+                </div>
+                <p class="mb-3">You are currently checked in. Click below to check out.</p>
+                <form method="POST" class="mb-0">
+                    <button type="submit" name="action" value="check_out" class="btn btn-warning btn-lg">
+                        <i class="fas fa-sign-out-alt me-2"></i>Check Out
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <div class="alert alert-success">
+                <h5><i class="fas fa-check-circle me-2"></i>Attendance Complete</h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <p class="mb-1"><strong>Check In:</strong></p>
+                        <h4>{{ today_record.check_in }}</h4>
+                    </div>
+                    <div class="col-md-4">
+                        <p class="mb-1"><strong>Check Out:</strong></p>
+                        <h4>{{ today_record.check_out }}</h4>
+                    </div>
+                    <div class="col-md-4">
+                        <p class="mb-1"><strong>Total Hours:</strong></p>
+                        <h4>
+                            {% if today_record.total_hours %}
+                            {{ today_record.total_hours }} hrs
+                            {% else %}
+                            --
+                            {% endif %}
+                        </h4>
+                    </div>
+                </div>
+                <p class="mb-0 mt-2">You have completed attendance for today. Thank you!</p>
+            </div>
+            {% endif %}
+
+            <div class="mt-4">
+                <h5>Attendance Rules:</h5>
+                <ul class="mb-0">
+                    <li>Check-in time: 9:00 AM</li>
+                    <li>Check-out time: 6:00 PM</li>
+                    <li>Late check-in after 9:30 AM will be marked as half-day</li>
+                    <li>Minimum working hours required: 8 hours</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="dashboard-card">
+            <h4 class="mb-4"><i class="fas fa-chart-pie me-2"></i>Monthly Summary</h4>
+            <div class="mb-3">
+                <p><strong>Present Days:</strong> {{ monthly_summary.present_days or 0 }}</p>
+                <div class="progress mb-2">
+                    <div class="progress-bar bg-success"
+                        style="width: {{ ((monthly_summary.present_days or 0) / 30 * 100)|int }}%">
+                        {{ ((monthly_summary.present_days or 0) / 30 * 100)|int }}%
+                    </div>
+                </div>
+
+                <p><strong>Absent Days:</strong> {{ monthly_summary.absent_days or 0 }}</p>
+                <div class="progress mb-2">
+                    <div class="progress-bar bg-danger"
+                        style="width: {{ ((monthly_summary.absent_days or 0) / 30 * 100)|int }}%">
+                        {{ ((monthly_summary.absent_days or 0) / 30 * 100)|int }}%
+                    </div>
+                </div>
+
+                <p><strong>Total Hours:</strong> {{ monthly_summary.total_hours or 0 }}</p>
+                <p><strong>Overtime Hours:</strong> {{ monthly_summary.overtime_hours or 0 }}</p>
+            </div>
+            <a href="/employee/attendance-summary" class="btn btn-outline-primary w-100">View Full Report</a>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance History -->
+<div class="dashboard-card">
+    <h4 class="mb-4"><i class="fas fa-history me-2"></i>Recent Attendance History</h4>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Day</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                    <th>Status</th>
+                    <th>Total Hours</th>
+                    <th>Overtime</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in attendance_history %}
+                <tr>
+                    <td>{{ a.date }}</td>
+                    <td>{{ a.date.strftime('%A') }}</td>
+                    <td>{{ a.check_in or '--' }}</td>
+                    <td>{{ a.check_out or '--' }}</td>
+                    <td>
+                        {% if a.status == 'Present' %}
+                        <span class="badge bg-success">Present</span>
+                        {% elif a.status == 'Absent' %}
+                        <span class="badge bg-danger">Absent</span>
+                        {% elif a.status == 'Half Day' %}
+                        <span class="badge bg-warning">Half Day</span>
+                        {% elif a.status == 'Leave' %}
+                        <span class="badge bg-info">On Leave</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Not Marked</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if a.total_hours %}
+                        {{ a.total_hours }} hrs
+                        {% else %}
+                        --
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if a.overtime_hours and a.overtime_hours > 0 %}
+                        <span class="badge bg-warning">{{ a.overtime_hours }} hrs</span>
+                        {% else %}
+                        --
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Update duration timer if checked in
+    {% if today_record and not today_record.check_out %}
+    function updateDuration() {
+        const checkInTime = new Date('{{ today }}T{{ today_record.check_in }}');
+        const now = new Date();
+        const diff = now - checkInTime;
+
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+        document.getElementById('currentDuration').textContent = `${hours}h ${minutes}m`;
+    }
+
+    updateDuration();
+    setInterval(updateDuration, 60000); // Update every minute
+    {% endif %}
+</script>
+{% endblock %}

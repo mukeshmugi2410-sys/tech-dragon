@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}Tech Cart HR - The Future of Work{% endblock %}
+
+{% block content %}
+<div class="hero-section fade-in-up">
+    <div class="hero-blob" style="top: -10%; right: -10%;"></div>
+    <div class="hero-blob"
+        style="bottom: -10%; left: -10%; width: 300px; height: 300px; background: linear-gradient(135deg, #ddd6fe 0%, #fbcfe8 100%);">
+    </div>
+
+    <div class="container position-relative">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-5 mb-lg-0">
+                <span class="badge bg-light text-primary px-3 py-2 rounded-pill mb-4 border fw-semibold shadow-sm">
+                    <i class="fas fa-star me-2 text-warning"></i> #1 HR Management Solution &amp;
+                </span>
+                <h1 class="display-3 fw-bold mb-4" style="line-height: 1.1;">
+                    Manage your team <br>
+                    <span
+                        style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Like
+                        a Pro.</span>
+                </h1>
+                <p class="lead text-muted mb-5" style="max-width: 90%;">
+                    Streamline attendance, payroll, performance, and more with Tech Cart's all-in-one HR platform.
+                    Beautiful, fast, and secure.
+                </p>
+
+                <div class="d-flex gap-3">
+                    {% if not session.user_id %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg px-5 py-3 shadow-lg">
+                        Get Started <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                    <a href="{{ url_for('register') }}" class="btn btn-outline-primary btn-lg px-5 py-3">
+                        Create Account
+                    </a>
+                    {% else %}
+                    {% if session.role == 'admin' %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary btn-lg px-5 py-3 shadow-lg">
+                        <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+                    </a>
+                    {% elif session.role == 'hr' %}
+                    <a href="{{ url_for('hr_dashboard') }}" class="btn btn-primary btn-lg px-5 py-3 shadow-lg">
+                        <i class="fas fa-tachometer-alt me-2"></i>HR Dashboard
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('employee_dashboard') }}" class="btn btn-primary btn-lg px-5 py-3 shadow-lg">
+                        <i class="fas fa-tachometer-alt me-2"></i>Your Dashboard
+                    </a>
+                    {% endif %}
+                    {% endif %}
+                </div>
+
+                <div class="mt-5 d-flex align-items-center gap-4 text-muted small">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check-circle text-success me-2"></i> Free 14-day trial
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check-circle text-success me-2"></i> No credit card required
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="position-relative">
+                    <div class="glass-card p-4 shadow-lg rotate-3d"
+                        style="transform: perspective(1000px) rotateY(-10deg) rotateX(5deg);">
+                        <img src="https://cdn.dribbble.com/users/411475/screenshots/16843058/media/64627d2c3df3132bb82f7c006859d042.png?compress=1&resize=800x600"
+                            alt="Dashboard Preview" class="img-fluid rounded-3 shadow-sm border">
+
+                        <!-- Floating Badges -->
+                        <div class="position-absolute shadow-lg bg-white p-3 rounded-4 d-flex align-items-center gap-3"
+                            style="top: -20px; right: -20px; width: 200px;">
+                            <div class="bg-success rounded-circle p-2 text-white">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block">Growth</small>
+                                <strong class="h5 mb-0">+128%</strong>
+                            </div>
+                        </div>
+
+                        <div class="position-absolute shadow-lg bg-white p-3 rounded-4 d-flex align-items-center gap-3"
+                            style="bottom: -20px; left: -20px;">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary rounded-circle p-1 border border-2 border-white"
+                                    style="width: 35px; height: 35px;"></div>
+                                <div class="bg-secondary rounded-circle p-1 border border-2 border-white"
+                                    style="width: 35px; height: 35px; margin-left: -10px;"></div>
+                                <div class="bg-warning rounded-circle p-1 border border-2 border-white"
+                                    style="width: 35px; height: 35px; margin-left: -10px;"></div>
+                            </div>
+                            <small class="fw-bold">1k+ Users</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container py-5 mt-5">
+    <div class="text-center mb-5 fade-in-up" style="animation-delay: 0.2s;">
+        <h2 class="fw-bold mb-3">Everything you need</h2>
+        <p class="text-muted lead">Powerful features to manage your entire workforce.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4 fade-in-up" style="animation-delay: 0.3s;">
+            <div class="glass-card h-100 p-4 text-center">
+                <div class="d-inline-flex bg-primary bg-opacity-10 p-4 rounded-circle mb-4 text-primary">
+                    <i class="fas fa-users fa-2x"></i>
+                </div>
+                <h4>Employee Management</h4>
+                <p class="text-muted">Centralize all your employee data. Handle onboarding, profiles, and roles with
+                    ease.</p>
+            </div>
+        </div>
+        <div class="col-md-4 fade-in-up" style="animation-delay: 0.4s;">
+            <div class="glass-card h-100 p-4 text-center">
+                <div class="d-inline-flex bg-secondary bg-opacity-10 p-4 rounded-circle mb-4 text-secondary">
+                    <i class="fas fa-clock fa-2x"></i>
+                </div>
+                <h4>Smart Attendance</h4>
+                <p class="text-muted">Real-time tracking, geolocation check-ins, and automated timesheets.</p>
+            </div>
+        </div>
+        <div class="col-md-4 fade-in-up" style="animation-delay: 0.5s;">
+            <div class="glass-card h-100 p-4 text-center">
+                <div class="d-inline-flex bg-success bg-opacity-10 p-4 rounded-circle mb-4 text-success">
+                    <i class="fas fa-file-invoice-dollar fa-2x"></i>
+                </div>
+                <h4>Automated Payroll</h4>
+                <p class="text-muted">Generate payslips, calculate taxes, and handle deductions in one click.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

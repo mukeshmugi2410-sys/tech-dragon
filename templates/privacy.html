@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    {% extends "base.html" %}
+{% block title %}Privacy Policy - HRMS{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <div class="dashboard-card">
+        <h2 class="mb-4">Privacy Policy</h2>
+        <p class="lead">Your privacy is important to us. It is HRMS's policy to respect your privacy regarding any
+            information we may collect from you.</p>
+
+        <hr>
+
+        <h4 class="mt-4">1. Information We Collect</h4>
+        <p>We only ask for personal information when we truly need it to provide a service to you. We collect it by fair
+            and lawful means, with your knowledge and consent.</p>
+
+        <h4 class="mt-4">2. Usage of Information</h4>
+        <p>We use the collected information to provide, operate, and maintain our website, allowing you to access and
+            use the HR management features.</p>
+
+        <h4 class="mt-4">3. Data Retention</h4>
+        <p>We only retain collected information for as long as necessary to provide you with your requested service.
+            What data we store, we’ll protect within commercially acceptable means to prevent loss and theft, as well as
+            unauthorized access, disclosure, copying, use or modification.</p>
+
+        <h4 class="mt-4">4. Data Sharing</h4>
+        <p>We don't share any personally identifying information publicly or with third-parties, except when required to
+            by law.</p>
+
+        <div class="mt-5 text-center">
+            <a href="/register" class="btn btn-primary">Back to Registration</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+    
+</body>
+</html>

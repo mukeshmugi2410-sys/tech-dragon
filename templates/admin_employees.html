@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+{% block title %}Employees Management - Admin{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-users me-2"></i>Employees Management</h2>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+        <i class="fas fa-plus me-1"></i>Add Employee
+    </button>
+</div>
+
+<!-- Search and Filter -->
+<div class="dashboard-card mb-4">
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <input type="text" class="form-control" placeholder="Search employees..." id="searchInput">
+        </div>
+        <div class="col-md-3 mb-3">
+            <select class="form-select" id="departmentFilter">
+                <option value="">All Departments</option>
+                {% for d in departments %}
+                <option value="{{ d.name }}">{{ d.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3 mb-3">
+            <select class="form-select" id="statusFilter">
+                <option value="">All Status</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-2 mb-3">
+            <button class="btn btn-outline-primary w-100" id="exportBtn">
+                <i class="fas fa-download me-1"></i>Export
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Employees Table -->
+<div class="dashboard-card">
+    <div class="table-responsive">
+        <table class="table table-hover" id="employeesTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Department</th>
+                    <th>Position</th>
+                    <th>Salary</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in employees %}
+                <tr>
+                    <td>{{ e.id }}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2"
+                                style="width: 36px; height: 36px;">
+                                {{ e.name[0]|upper }}
+                            </div>
+                            {{ e.name }}
+                        </div>
+                    </td>
+                    <td>{{ e.user_email or e.email }}</td>
+                    <td>{{ e.phone or 'N/A' }}</td>
+                    <td>
+                        <span class="badge bg-info">{{ e.department_name or 'N/A' }}</span>
+                    </td>
+                    <td>{{ e.position or 'N/A' }}</td>
+                    <td>₹{{ e.salary or '0' }}</td>
+                    <td>
+                        <span class="badge bg-success">Active</span>
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                data-bs-target="#editEmployeeModal{{ e.id }}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-info" data-bs-toggle="modal"
+                                data-bs-target="#viewEmployeeModal{{ e.id }}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <a href="/admin/employees/delete/{{ e.id }}" class="btn btn-sm btn-danger"
+                                onclick="return confirmDelete()">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1">Previous</a>
+            </li>
+            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item">
+                <a class="page-link" href="#">Next</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<script>
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('keyup', function () {
+        const searchValue = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#employeesTable tbody tr');
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchValue) ? '' : 'none';
+        });
+    });
+
+    // Filter by department
+    document.getElementById('departmentFilter').addEventListener('change', function () {
+        const filterValue = this.value;
+        const rows = document.querySelectorAll('#employeesTable tbody tr');
+
+        rows.forEach(row => {
+            const department = row.cells[4].textContent;
+            if (filterValue === '' || department.includes(filterValue)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+{% block modals %}
+<!-- Add Employee Modal -->
+<div class="modal fade" id="addEmployeeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Employee</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/admin/employees/add">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" name="name" class="form-control" placeholder="Enter full name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" name="email" class="form-control" placeholder="Enter email" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone Number</label>
+                            <input type="text" name="phone" class="form-control" placeholder="Enter phone number">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Department</label>
+                            <select name="department_id" class="form-select" required>
+                                <option value="">Select Department</option>
+                                {% for d in departments %}
+                                <option value="{{ d.id }}">{{ d.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Position</label>
+                            <input type="text" name="position" class="form-control" placeholder="Enter position">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Salary (₹)</label>
+                            <input type="number" name="salary" class="form-control" placeholder="Enter salary"
+                                value="0">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Date of Joining</label>
+                            <input type="date" name="date_of_joining" class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Emergency Contact</label>
+                            <input type="text" name="emergency_contact" class="form-control"
+                                placeholder="Emergency contact">
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Address</label>
+                            <textarea name="address" class="form-control" rows="3"
+                                placeholder="Enter address"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Employee</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% for e in employees %}
+<!-- View Employee Modal -->
+<div class="modal fade" id="viewEmployeeModal{{ e.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Employee Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto"
+                            style="width: 100px; height: 100px; font-size: 2rem;">
+                            {{ e.name[0]|upper }}
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <h4>{{ e.name }}</h4>
+                        <p class="text-muted">{{ e.position or 'Not specified' }}</p>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Email:</strong><br>{{ e.user_email or e.email }}</p>
+                                <p><strong>Phone:</strong><br>{{ e.phone or 'N/A' }}</p>
+                                <p><strong>Department:</strong><br>{{ e.department_name or 'N/A' }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Salary:</strong><br>₹{{ e.salary or '0' }}</p>
+                                <p><strong>Address:</strong><br>{{ e.address or 'N/A' }}</p>
+                                <p><strong>Status:</strong><br><span class="badge bg-success">Active</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ e.id }}">
+                    <i class="fas fa-edit me-1"></i>Edit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Employee Modal -->
+<div class="modal fade" id="editEmployeeModal{{ e.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Employee</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/admin/employees/edit/{{ e.id }}">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" name="name" class="form-control" value="{{ e.name }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" value="{{ e.user_email or e.email }}" disabled>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone</label>
+                            <input type="text" name="phone" class="form-control" value="{{ e.phone or '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Department</label>
+                            <select name="department_id" class="form-select">
+                                <option value="">Select Department</option>
+                                {% for d in departments %}
+                                <option value="{{ d.id }}" {% if d.id==e.department_id %}selected{% endif %}>
+                                    {{ d.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Position</label>
+                            <input type="text" name="position" class="form-control" value="{{ e.position or '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Salary</label>
+                            <input type="number" name="salary" class="form-control" value="{{ e.salary or 0 }}">
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Address</label>
+                            <textarea name="address" class="form-control" rows="3">{{ e.address or '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

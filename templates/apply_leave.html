@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Apply Leave{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-file-alt me-2"></i>Apply for Leave</h2>
+    <a href="/leave/my-leaves" class="btn btn-outline-primary">
+        <i class="fas fa-clipboard-list me-1"></i>View My Leaves
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="dashboard-card">
+            <h4 class="mb-4">Leave Application Form</h4>
+            
+            <form method="post" action="{{ url_for('apply_leave') }}">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Leave Type</label>
+                        <select name="leave_type_id" class="form-select" required>
+                            <option value="">Select Leave Type</option>
+                            {% for lt in leave_types %}
+                            <option value="{{ lt.id }}">{{ lt.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Available Balance</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" value="15 days" disabled>
+                            <span class="input-group-text">days</span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" name="start_date" class="form-control" required 
+                               min="{{ now.strftime('%Y-%m-%d') }}">
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">End Date</label>
+                        <input type="date" name="end_date" class="form-control" required 
+                               min="{{ now.strftime('%Y-%m-%d') }}">
+                    </div>
+                    
+                    <div class="col-12 mb-3">
+                        <label class="form-label">Number of Days</label>
+                        <input type="text" class="form-control" id="totalDays" value="0" disabled>
+                        <small class="text-muted">Calculated automatically based on dates</small>
+                    </div>
+                    
+                    <div class="col-12 mb-4">
+                        <label class="form-label">Reason for Leave</label>
+                        <textarea name="reason" class="form-control" rows="4" 
+                                  placeholder="Please provide a reason for your leave application..." 
+                                  required></textarea>
+                    </div>
+                    
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle me-2"></i>Important Notes:</h6>
+                            <ul class="mb-0">
+                                <li>Leave applications require approval from your HR manager</li>
+                                <li>Apply at least 2 days in advance for planned leaves</li>
+                                <li>Emergency leaves can be applied on the same day</li>
+                                <li>You will receive notification once your leave is approved/rejected</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="/leave/my-leaves" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Submit Application
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="dashboard-card mb-4">
+            <h4 class="mb-4"><i class="fas fa-calendar-alt me-2"></i>Leave Balance</h4>
+            <div class="mb-3">
+                <p><strong>Sick Leave:</strong> 10 days remaining</p>
+                <div class="progress mb-2">
+                    <div class="progress-bar bg-info" style="width: 80%">8/10 used</div>
+                </div>
+                
+                <p><strong>Casual Leave:</strong> 12 days remaining</p>
+                <div class="progress mb-2">
+                    <div class="progress-bar bg-success" style="width: 60%">6/12 used</div>
+                </div>
+                
+                <p><strong>Earned Leave:</strong> 20 days remaining</p>
+                <div class="progress mb-2">
+                    <div class="progress-bar bg-warning" style="width: 40%">8/20 used</div>
+                </div>
+                
+                <p><strong>Maternity Leave:</strong> 180 days available</p>
+                <div class="progress mb-2">
+                    <div class="progress-bar bg-primary" style="width: 0%">0/180 used</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-card">
+            <h4 class="mb-4"><i class="fas fa-history me-2"></i>Recent Leaves</h4>
+            <div class="list-group">
+                <div class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Sick Leave</h6>
+                        <small class="text-success">Approved</small>
+                    </div>
+                    <p class="mb-1">Jan 10-12, 2024</p>
+                    <small>3 days</small>
+                </div>
+                <div class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Casual Leave</h6>
+                        <small class="text-success">Approved</small>
+                    </div>
+                    <p class="mb-1">Dec 25-26, 2023</p>
+                    <small>2 days</small>
+                </div>
+                <div class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Earned Leave</h6>
+                        <small class="text-warning">Pending</small>
+                    </div>
+                    <p class="mb-1">Feb 5-7, 2024</p>
+                    <small>3 days</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Calculate days between dates
+    const startDateInput = document.querySelector('input[name="start_date"]');
+    const endDateInput = document.querySelector('input[name="end_date"]');
+    const totalDaysInput = document.getElementById('totalDays');
+    
+    function calculateDays() {
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        
+        if (startDate && endDate && startDate <= endDate) {
+            const diffTime = Math.abs(endDate - startDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            totalDaysInput.value = diffDays + ' day(s)';
+        } else {
+            totalDaysInput.value = '0';
+        }
+    }
+    
+    startDateInput.addEventListener('change', calculateDays);
+    endDateInput.addEventListener('change', calculateDays);
+</script>
+{% endblock %}

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Tech Dragon HRMS{% endblock %}</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    {% block styles %}{% endblock %}
+</head>
+
+<body>
+    <div class="d-flex" id="wrapper">
+        {% if session.user_id %}
+        <!-- Sidebar -->
+        <div class="sidebar position-fixed" id="sidebar-wrapper"
+            style="width: 250px; z-index: 1000; transition: all 0.3s ease;">
+            <div class="sidebar-heading text-center py-4 fs-4 fw-bold text-uppercase border-bottom pb-3 mb-3">
+                <i class="fas fa-dragon me-2 text-primary"></i>Tech Dragon
+            </div>
+            <div class="list-group list-group-flush">
+                {% if session.role == 'admin' %}
+                <a href="{{ url_for('admin_dashboard') }}"
+                    class="list-group-item list-group-item-action bg-transparent border-0 {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt"></i>Dashboard
+                </a>
+                <a href="{{ url_for('admin_employees') }}"
+                    class="list-group-item list-group-item-action bg-transparent border-0 {% if 'employees' in request.endpoint and session.role == 'admin' %}active{% endif %}">
+                    <i class="fas fa-users"></i>Employees
+                </a>
+                <a href="{{ url_for('admin_hr_managers') }}"
+                    class="list-group-item list-group-item-action bg-transparent border-0 {% if 'hr_managers' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-user-tie"></i>HR Managers
+                </a>
+                <a href="{{ url_for('admin_departments') }}"
+                    class="list-group-item list-group-item-action bg-transparent border-0 {% if 'departments' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-building"></i>Departments
+                </a>
+                <a href="{{ url_for('audit_logs') }}"
+                    class="list-group-item list-group-item-action bg-transparent border-0 {% if 'audit_logs' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-history"></i>Audit Logs
+                </a>
+                {% elif session.role == 'hr' %}
+                <a href="{{ url_for('hr_dashboard') }}"
+                    class="list-group-item list-group-item-action bg-transparent border-0 {% if request.endpoint == 'hr_dashboard' %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt"></i>Dashboard
+                </a>
+                <a href="{{ url_for('hr_attendance') }}"
+                    class="list-group-item list-group-item-action bg-transparent border-0 {% if 'attendance' in request.endpoint and session.role == 'hr' %}active{% endif %}">
+                    <i class="fas fa-calendar-check"></i>Attendance
+                </a>
+                <a href="{{ url_for('hr_leave_requests') }}"
+                    class="list-group-item list-group-item-action bg-transparent border-0 {% if 'leave' in request.endpoint and session.role == 'hr' %}active{% endif %}">
+                    <i class="fas fa-envelope-open-text"></i>Leave Requests
+                </a>
+                <a href="{{ url_for('hr_payroll_slips') }}"
+                    class="list-group-item list-group-item-action bg-transparent border-0 {% if 'payroll' in request.endpoint and session.role == 'hr' %}active{% endif %}">
+                    <i class="fas fa-file-invoice-dollar"></i>Payroll
+                </a>
+                {% elif session.role == 'employee' %}
+                <a href="{{ url_for('employee_dashboard') }}"
+                    class="list-group-item list-group-item-action bg-transparent border-0 {% if request.endpoint == 'employee_dashboard' %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt"></i>Dashboard
+                </a>
+                <a href="{{ url_for('mark_attendance') }}"
+                    class="list-group-item list-group-item-action bg-transparent border-0 {% if 'mark_attendance' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-fingerprint"></i>Mark Attendance
+                </a>
+                <a href="{{ url_for('my_leaves') }}"
+                    class="list-group-item list-group-item-action bg-transparent border-0 {% if 'leave' in request.endpoint and session.role == 'employee' %}active{% endif %}">
+                    <i class="fas fa-calendar-minus"></i>My Leaves
+                </a>
+                <a href="{{ url_for('my_payroll_slips') }}"
+                    class="list-group-item list-group-item-action bg-transparent border-0 {% if 'payroll' in request.endpoint and session.role == 'employee' %}active{% endif %}">
+                    <i class="fas fa-file-invoice"></i>Payslips
+                </a>
+                {% endif %}
+
+                <!-- Common Links -->
+                {% if session.role in ['admin', 'hr', 'employee'] %}
+                <a href="{{ url_for('documents') }}"
+                    class="list-group-item list-group-item-action bg-transparent border-0 {% if 'documents' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-folder"></i>Documents
+                </a>
+                <a href="{{ url_for('performance_reviews') }}"
+                    class="list-group-item list-group-item-action bg-transparent border-0 {% if 'performance' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-star"></i>Performance
+                </a>
+                <a href="{{ url_for('profile') }}"
+                    class="list-group-item list-group-item-action bg-transparent border-0 {% if 'profile' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-user-circle"></i>My Profile
+                </a>
+                {% endif %}
+
+                <a href="{{ url_for('logout') }}"
+                    class="list-group-item list-group-item-action bg-transparent border-0 text-danger mt-3">
+                    <i class="fas fa-sign-out-alt"></i>Logout
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper" class="w-100"
+            style="margin-left: {% if session.user_id %}250px{% else %}0{% endif %}; transition: all 0.3s ease;">
+            <!-- Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-light glass-effect sticky-top px-4 py-3 mb-4">
+                <div class="container-fluid">
+                    {% if session.user_id %}
+                    <button class="btn btn-link text-dark" id="menu-toggle"><i class="fas fa-bars fa-lg"></i></button>
+                    {% else %}
+                    <a class="navbar-brand" href="/"><i class="fas fa-dragon me-2 text-primary"></i>Tech Dragon</a>
+                    {% endif %}
+
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#navbarSupportedContent">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav ms-auto mt-2 mt-lg-0 align-items-center">
+                            {% if session.user_id %}
+                            <li class="nav-item me-3">
+                                <a class="nav-link position-relative" href="{{ url_for('notifications') }}">
+                                    <i class="fas fa-bell fa-lg text-secondary"></i>
+                                    {% if notification_count and notification_count > 0 %}
+                                    <span
+                                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                        style="font-size: 0.6rem;">
+                                        {{ notification_count }}
+                                    </span>
+                                    {% endif %}
+                                </a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#"
+                                    id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold shadow-sm"
+                                        style="width: 35px; height: 35px;">
+                                        {{ session.user_name[0]|upper }}
+                                    </div>
+                                    <span class="fw-semibold">{{ session.user_name }}</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-0 overflow-hidden"
+                                    style="border-radius: 12px;">
+                                    <li><a class="dropdown-item py-2 px-4" href="{{ url_for('profile') }}"><i
+                                                class="fas fa-user me-2 text-muted"></i>Profile</a></li>
+                                    <li><a class="dropdown-item py-2 px-4" href="{{ url_for('change_password') }}"><i
+                                                class="fas fa-key me-2 text-muted"></i>Password</a></li>
+                                    <li>
+                                        <hr class="dropdown-divider my-0">
+                                    </li>
+                                    <li><a class="dropdown-item py-2 px-4 text-danger" href="{{ url_for('logout') }}"><i
+                                                class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                                </ul>
+                            </li>
+                            {% else %}
+                            <li class="nav-item"><a class="nav-link fw-semibold px-3"
+                                    href="{{ url_for('login') }}">Login</a></li>
+                            <li class="nav-item"><a class="btn btn-primary ms-2 px-4 rounded-pill shadow-sm"
+                                    href="{{ url_for('register') }}">Get Started</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container-fluid px-4 pb-5">
+                <!-- Flash Messages with Animation -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show border-0 shadow-sm glass-card mb-4"
+                            role="alert">
+                            <i
+                                class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                {% endwith %}
+
+                <!-- Main Content Block -->
+                <div class="fade-in-up">
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+
+            <footer class="footer text-center py-4 text-muted small mt-auto">
+                &copy; 2025 Mukesh | Full Stack Developer
+            </footer>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block modals %}{% endblock %}
+    <script>
+        var el = document.getElementById("wrapper");
+        var toggleButton = document.getElementById("menu-toggle");
+
+        if (toggleButton) {
+            toggleButton.onclick = function () {
+                el.classList.toggle("toggled");
+                // Custom logic to handle checking if needed
+                var sidebar = document.getElementById("sidebar-wrapper");
+                var content = document.getElementById("page-content-wrapper");
+
+                if (el.classList.contains("toggled")) {
+                    sidebar.style.marginLeft = "-250px";
+                    content.style.marginLeft = "0";
+                } else {
+                    sidebar.style.marginLeft = "0";
+                    content.style.marginLeft = "250px";
+                }
+            };
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>
